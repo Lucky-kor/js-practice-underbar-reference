@@ -23,12 +23,46 @@
 // _.memoize를 완성한 후에 피보나치 함수에 적용하여 비교해 보시기 바랍니다.
 // 단, 재귀 함수는 함수가 할당된 변수에 메모이제이션이 적용된 함수를 재할당해야 합니다.(테스트 케이스 참고)
 _.memoize = function (func) {
-  // TODO: 여기에 코드를 작성합니다.
+  const cache = {}; // 결과를 저장할 캐시 객체
+
+  return function (...args) {
+    const key = JSON.stringify(args); // 인자를 문자열로 변환하여 키 생성
+
+    if (cache[key] === undefined) {
+      cache[key] = func.apply(this, args); // 캐시에 저장
+    }
+
+    return cache[key]; // 이미 계산된 결과 반환
+  };
 };
 
 // _.throttle은 입력으로 전달되는 시간(ms, 밀리초)동안에 callback 함수를 단 한번만 실행되는 함수를 반환합니다.
 // 리턴되는 함수는 구간의 길이가 입력의 크기인 임의의 구간에서 callback 함수를 한 번만 실행되어야 합니다.
 // 예를 들어, _.throttle(func, 100)가 리턴하는 함수는 적어도 100ms 간격을 사이에 두고 callback 함수를 실행해야 합니다.
 _.throttle = function (func, wait) {
-  // TODO: 여기에 코드를 작성합니다.
+  let lastCallTime = 0; // 마지막 실행 시간
+  let timeoutId = null; // 지연 실행 타이머 ID
+  let lastArgs = null; // 마지막 호출 인자
+  let context = null;
+
+  return function (...args) {
+    const now = Date.now(); // 현재 시간
+    context = this; // 실행 컨텍스트 저장
+    lastArgs = args; // 마지막 인자 저장
+
+    const remainingTime = wait - (now - lastCallTime);
+
+    // 남은 시간이 0 이하인 경우 즉시 실행
+    if (remainingTime <= 0) {
+      lastCallTime = now;
+      func.apply(context, lastArgs);
+    } else if (!timeoutId) {
+      // 남은 시간이 있는 경우, 다음 실행 예약
+      timeoutId = setTimeout(() => {
+        lastCallTime = Date.now();
+        timeoutId = null;
+        func.apply(context, lastArgs);
+      }, remainingTime);
+    }
+  };
 };

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * FUNCTIONS
  * =========
@@ -33,17 +31,28 @@
 // _.once가 리턴하는 함수를 여러 번 호출해도 callback 함수는 한 번 이상 호출되지 않습니다.
 _.once = function (func) {
   // TODO: 여기에 코드를 작성합니다.
-
-  return function () {
+  let isCalled = false;
+  let result;
+  return function (...args) {
     // TIP: arguments 키워드 혹은, spread operator를 사용하세요.
+    if(!isCalled) {
+      // result = func(...args);
+      result = func.apply(this, args);
+      isCalled = true;
+    }
+    return result;
   };
 };
 
 // _.delay는 입력으로 전달되는 시간(ms, 밀리초)후 callback 함수를 함께 전달되는 (임의의 개수의) 인자와 함께 실행합니다.
 // 예를 들어, _.delay(func, 500, 'a', 'b')의 결과로 '최소' 500m가 지난 이후에 func('a', 'b')가 호출됩니다.
 // 필요하면, Chapter - 비동기를 예습하세요.
-_.delay = function (func, wait) {
+_.delay = function (func, wait, ...args) {
   // TODO: 여기에 코드를 작성합니다.
+  // setTimeout(해야 할 일, 시간);
+  setTimeout(() => {
+    func(...args);
+  }, wait);
 };
 
 /**
@@ -57,6 +66,13 @@ _.delay = function (func, wait) {
 // 입력으로 전달되는 배열의 요소는 모두 primitive value라고 가정합니다.
 _.includes = function (arr, target) {
   // TODO: 여기에 코드를 작성합니다.
+  let result = false;
+
+  _.each(arr, (el) => {
+    if(el === target) result = true;
+  });
+
+  return result;
 };
 
 // _.every는 배열의 모든 요소가 test 함수(iteratee)를 통과하면 true를, 그렇지 않은 경우 false를 리턴합니다.
@@ -66,6 +82,29 @@ _.includes = function (arr, target) {
 // 빈 배열을 입력받은 경우, true를 리턴해야 합니다. (공허하게 참, vacantly true)
 _.every = function (arr, iteratee) {
   // TODO: 여기에 코드를 작성합니다.
+  if(iteratee === undefined) {
+    iteratee = function(element) {
+      if(element) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    iteratee = function(el) {
+      return el;
+    }
+
+    iteratee = (el) => el;
+  }
+
+  for(let i = 0; i < arr.length; i++) {
+    let currentEl = arr[i];
+    if(!iteratee(currentEl)) return false;
+  }
+
+  return true;
+
 };
 
 // _.some은 배열의 요소 중 하나라도 test 함수(iteratee)를 통과하면 true를, 그렇지 않은 경우 false를 리턴합니다.
@@ -73,6 +112,22 @@ _.every = function (arr, iteratee) {
 // 그 외 조건은 앞서 _.every와 동일합니다.
 _.some = function (arr, iteratee) {
   // TODO: 여기에 코드를 작성합니다.
+  if(iteratee === undefined) {
+    iteratee = (el) => el;
+  }
+
+  let result = false;
+  _.each(arr, function(element) {
+    if(iteratee(element)) {
+      result = true;
+    }
+  });
+
+  // for(let i = 0; i < arr.length; i++) {
+  //   if(iteratee(arr[i])) return true;
+  // }
+
+  return result;
 };
 
 /**
@@ -104,13 +159,29 @@ _.some = function (arr, iteratee) {
 // spread syntax 또는 arguments 객체를 사용해야 합니다.
 // 함수의 시그니쳐(함수의 입력과 출력, 함수의 모양)를 적절하게 변형하시기 바랍니다.
 // _.each를 사용해서 구현합니다.
-_.extend = function () {
+_.extend = function (...args) {
   // TODO: 여기에 코드를 작성합니다.
+  let obj = args[0];
+  for(let i = 1; i < args.length; i++) {
+    _.each(args[i], function(value, key) {
+      obj[key] = value;
+    })
+  };
+  return obj;
 };
 
 // _.defaults는 _.extend와 비슷하게 동작하지만, 이미 존재하는 속성(key)을 덮어쓰지 않습니다.
-_.defaults = function () {
+_.defaults = function (...args) {
   // TODO: 여기에 코드를 작성합니다.
+  let obj = args[0];
+  for(let i = 1; i < args.length; i++) {
+    _.each(args[i], function(value, key) {
+      if(obj[key] === undefined) {
+        obj[key] = value;
+      }
+    })
+  };
+  return obj;
 };
 
 /**
@@ -132,15 +203,71 @@ _.defaults = function () {
 //  const arr2 = [1,2];
 //  const result = _.zip(arr1, arr2)
 //  console.log(result); // --> [['a',1], ['b',2], ['c', undefined]]
-_.zip = function () {
-  // TODO: 여기에 코드를 작성합니다.
+_.zip = function (...args) { 
+  // _.zip 함수는 여러 개의 배열을 입력받아, 
+  // 각 배열의 같은 인덱스 요소들을 묶어서 새로운 배열로 반환하는 함수입니다.
+  // 여기서 `...args`는 가변 인자를 의미하며, 여러 개의 배열을 받습니다.
+
+  // 최대 길이를 저장할 변수를 선언합니다.
+  let maxLength = 0;
+
+  // 각 배열의 길이를 확인해서 가장 긴 배열의 길이를 구합니다.
+  for (let i = 0; i < args.length; i++) { // args에 있는 배열들을 순회합니다.
+    if (maxLength < args[i].length) { // 현재 배열의 길이가 기존 최대 길이보다 길면
+      maxLength = args[i].length;    // 최대 길이를 업데이트합니다.
+    }
+  }
+
+  // 결과를 담을 배열을 선언합니다.
+  let result = [];
+
+  // 결과 배열을 미리 undefined로 초기화합니다.
+  for (let i = 0; i < maxLength; i++) { // 최대 길이만큼 반복합니다.
+    let innerResult = []; // 각 행을 담을 빈 배열을 생성합니다.
+    for (let i = 0; i < args.length; i++) { // 입력받은 배열 개수만큼 반복합니다.
+      innerResult.push(undefined); // 각 요소를 undefined로 채워넣습니다.
+    }
+    result.push(innerResult); // 초기화된 배열을 결과에 추가합니다.
+  }
+
+  // 이제 입력받은 각 배열의 요소를 result에 채워넣는 작업을 시작합니다.
+  for (let i = 0; i < args.length; i++) { // 입력받은 배열들의 개수만큼 반복합니다.
+    let currentArray = args[i]; // 현재 순회 중인 배열을 변수에 저장합니다.
+
+    // _.each 함수는 배열의 각 요소를 순회하는 함수입니다.
+    _.each(currentArray, function (innerEl, innerIdx) {
+      // result 배열의 각 행의 i번째 자리에 현재 배열의 요소를 채워넣습니다.
+      result[innerIdx][i] = innerEl;
+    });
+  }
+
+  // 모든 작업이 끝난 후, 최종적으로 완성된 result 배열을 반환합니다.
+  return result;
 };
 
 // _.zipStrict은 _.zip과 비슷하게 동작하지만,
 // 최종적으로 리턴되는 배열의 각 요소의 길이는 입력으로 전달되는 배열 중 가장 '짧은' 배열의 길이로 통일됩니다.
 // 그 외 조건은 앞서 _.zip과 동일합니다.
-_.zipStrict = function () {
+_.zipStrict = function (...args) {
   // TODO: 여기에 코드를 작성합니다.
+  // 최소 길이를 저장할 변수를 선언합니다.
+  let minLength = args[0].length;
+
+  // 각 배열의 길이를 확인해서 가장 짧은 배열의 길이를 구합니다.
+  for (let i = 1; i < args.length; i++) { // args에 있는 배열들을 순회합니다.
+    if (minLength > args[i].length) { // 현재 배열의 길이가 기존 최대 길이보다 작다면
+      minLength = args[i].length;    // 최소 길이를 업데이트합니다.
+    }
+  }
+
+  let result = [];
+  for(let i = 0; i < minLength; i++) {
+    let group = _.map(args, function(arr) {
+      return arr[i];
+    });
+    result.push(group);
+  }
+  return result;
 };
 
 // _.intersection은 여러 개의 배열을 입력받아, 교집합 배열을 리턴합니다.
@@ -150,11 +277,20 @@ _.zipStrict = function () {
 // 아래 예제를 참고하시기 바랍니다.
 //  const set1 = ['a', 'e', b', 'c'];
 //  const set2 = ['c', 'd', 'e'];
-//  const result = _.intersection(set1, set2);
-//  console.log(result) // --> ['e', 'c']
+//  const set3 = ['z', 'x', 'c'];
+//  const result = _.intersection(set1, set2, set3);
+//  console.log(result) // --> ['e', 'c'] -> xx []
 //                      // 첫 번째 배열에 'e'가 먼저 등장
-_.intersection = function () {
+_.intersection = function (...args) {
   // TODO: 여기에 코드를 작성합니다.
+  let firstArray = args[0];
+  let restArray = _.slice(args, 1);
+
+  return _.filter(firstArray, function(element) {
+    return _.every(restArray, function(innerArr) {
+      return _.includes(innerArr, element);
+    })
+  });
 };
 
 // _.difference는 여러 개의 배열을 입력받아, 차집합 배열을 리턴합니다.
@@ -166,8 +302,20 @@ _.intersection = function () {
 //  const set2 = ['b', 'c', 'd'];
 //  const result = _.difference(set1, set2);
 //  console.log(result) // --> ['a']
-_.difference = function () {
+_.difference = function (firstArray, ...args) {
   // TODO: 여기에 코드를 작성합니다.
+  let restArray = [];
+
+  // 나머지 요소를 병합
+  _.each(args, function(innerArray) {
+    _.each(innerArray, function(el) {
+      restArray.push(el);
+    })
+  })
+
+  return _.filter(firstArray, function(el) {
+    return !_.includes(restArray, el);
+  });
 };
 
 // _.sortBy는 배열의 각 요소에 함수 transform을 적용하여 얻은 결과를 기준으로 정렬합니다.
@@ -209,7 +357,19 @@ _.difference = function () {
 // 이번 스프린트는 정렬 자체를 다루지 않으니 스프린트 이후에 스스로 학습하시기 바랍니다.
 //  학습 우선순위: bubble sort, insertion sort, quick sort, merge sort, radix sort
 _.sortBy = function (arr, transform, order) {
-  // TODO: 여기에 코드를 작성합니다.
+  if (transform === undefined) transform = _.identity; // transform이 없으면 기본 값 반환
+  if (order === undefined) order = 1; // order가 없으면 오름차순 (1)
+
+  const arrCloned = _.map(arr, _.identity); // 원본 배열 복사
+
+  return arrCloned.sort(function (a, b) {
+    const aValue = transform(a) === undefined ? -Infinity : transform(a);
+    const bValue = transform(b) === undefined ? -Infinity : transform(b);
+
+    if (aValue < bValue) return -1 * order;
+    if (aValue > bValue) return 1 * order;
+    return 0;
+  });
 };
 
 // _.shuffle은 배열 요소의 순서가 랜덤하게 변경된 새로운 배열을 리턴합니다.

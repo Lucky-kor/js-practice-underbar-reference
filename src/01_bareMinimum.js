@@ -11,6 +11,7 @@
 // 이 함수는 underbar의 기능 구현 및 테스트를 위해 재사용되는 함수입니다.
 _.identity = function (val) {
   // TODO: 여기에 코드를 작성합니다.
+  return val;
 };
 
 /**
@@ -112,6 +113,23 @@ _.slice = function (arr, start, end) {
 // n이 배열의 길이를 벗어날 경우, 전체 배열을 shallow copy한 새로운 배열을 리턴합니다.
 _.take = function (arr, n) {
   // TODO: 여기에 코드를 작성합니다.
+
+  // 음수일때 or 0일때
+  if(n <= 0 || n === undefined) return [];
+
+  // // 크기를 벗어나는 경우 순회 값 고정
+  // let _length = n;
+  // if(arr.length <= n) {
+  //   n = arr.length;
+  // }
+
+  // // 순회하며 배열에 추가
+  // let result = [];
+  // for(let i = 0; i < n; i++) {
+  //   result.push(arr[i]);
+  // }
+  // return result;
+  return _.slice(arr, 0, n);
 };
 
 // _.drop는 _.take와는 반대로, 처음 n개의 element를 제외한 새로운 배열을 리턴합니다.
@@ -119,6 +137,15 @@ _.take = function (arr, n) {
 // n이 배열의 길이를 벗어날 경우, 빈 배열을 리턴합니다.
 _.drop = function (arr, n) {
   // TODO: 여기에 코드를 작성합니다.
+
+  // n이 undefined or 음수일때 그 배열 그대로 반환
+  if(n === undefined || n < 0) return _.slice(arr, 0);
+
+  // n이 배열의 크기보다 클 경우 빈 배열 반환
+  if(n >= arr.length) return [];
+
+  return _.slice(arr, n);
+
 };
 
 // _.last는 배열의 마지막 n개의 element를 담은 새로운 배열을 리턴합니다.
@@ -127,6 +154,13 @@ _.drop = function (arr, n) {
 // _.take와 _.drop 중 일부 또는 전부를 활용할 수 있습니다.
 _.last = function (arr, n) {
   // TODO: 여기에 코드를 작성합니다.
+  // 음수 or 생략된 경우
+  if(n === undefined || n < 0) return _.slice(arr, arr.length - 1);
+
+  // n이 배열의 크기보다 큰 경우 전체 반환
+  if(n === 0) return [];
+
+  return _.slice(arr, -n);
 };
 
 // _.each는 collection의 각 데이터에 반복적인 작업을 수행합니다.
@@ -160,6 +194,20 @@ _.last = function (arr, n) {
 // _.each는 명시적으로 어떤 값을 리턴하지 않습니다.
 _.each = function (collection, iteratee) {
   // TODO: 여기에 코드를 작성합니다.
+  // 우리가 순회해해야 하는 자료형태는 2가지, 배열과 객체
+  // 두 자료형의 순회 방법이 다름.
+  if(Array.isArray(collection)) {
+    for(let i = 0; i < collection.length; i++) {
+      let currentElement = collection[i];
+      iteratee(currentElement, i, collection);
+    }
+  } else {
+    for(let key in collection) {
+      let currentValue = collection[key];
+      iteratee(currentValue, key, collection);
+    }
+  }
+
 };
 
 // _.indexOf는 target으로 전달되는 값이 arr의 요소인 경우, 배열에서의 위치(index)를 리턴합니다.
@@ -178,6 +226,13 @@ _.indexOf = function (arr, target) {
   });
 
   return result;
+
+  // for(let i = 0; i < arr.length; i++) {
+  //   let currentEl = arr[i];
+  //   if(currentEl === target) return i;
+  // }
+
+  // return -1;
 };
 
 // _.filter는 test 함수를 통과하는 모든 요소를 담은 새로운 배열을 리턴합니다.
@@ -185,11 +240,40 @@ _.indexOf = function (arr, target) {
 // test 함수는 각 요소에 반복 적용됩니다.
 _.filter = function (arr, test) {
   // TODO: 여기에 코드를 작성합니다.
+
+  // arr를 순회하며 각 요소를 test에 넣어서 실행(test(currentEl) === true)라면
+  // 해당 요소만 새로운 배열에 넣고
+  // 순회가 끝나면 새로운 배열 반환
+
+  let result = [];
+
+  // _.each(arr, test);
+  _.each(arr, function(el) {
+    if(test(el)) {
+      result.push(el);
+    }
+  });
+
+  return result;
+
 };
 
 // _.reject는 _.filter와 정반대로 test 함수를 통과하지 않는 모든 요소를 담은 새로운 배열을 리턴합니다.
 _.reject = function (arr, test) {
   // TODO: 여기에 코드를 작성합니다.
+
+  // let result = [];
+
+  // _.each(arr, function(el) {
+  //   if(!test(el)) {
+  //     result.push(el);
+  //   }
+  // })
+  
+  // return result;
+  return _.filter(arr, function(el) {
+    return !test(el);
+  });
 };
 
 // _.uniq는 주어진 배열의 요소가 중복되지 않도록 새로운 배열을 리턴합니다.
@@ -197,6 +281,35 @@ _.reject = function (arr, test) {
 // 입력으로 전달되는 배열의 요소는 모두 primitive value라고 가정합니다.
 _.uniq = function (arr) {
   // TODO: 여기에 코드를 작성합니다.
+  let result = [];
+
+  // _.filter(arr, function(el) {
+  //   if(_.indexOf(result, el) === -1) {
+  //     result.push(el);
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // });
+
+  // _.each(arr, function(el) {
+  //   if(_.indexOf(result, el) === -1) {
+  //     result.push(el);
+  //   }
+  // });
+  _.each(arr, function(el) {
+    let isContains = false;
+    _.each(result, function(resultEl) {
+      if(resultEl === el) {
+        isContains = true;
+      }
+    })
+    if(!isContains) {
+      result.push(el);
+    }
+  });
+
+  return result;
 };
 
 // _.map은 iteratee(반복되는 작업)를 배열의 각 요소에 적용(apply)한 결과를 담은 새로운 배열을 리턴합니다.
@@ -205,6 +318,13 @@ _.map = function (arr, iteratee) {
   // TODO: 여기에 코드를 작성합니다.
   // _.map 함수는 매우 자주 사용됩니다.
   // _.each 함수와 비슷하게 동작하지만, 각 요소에 iteratee를 적용한 결과를 리턴합니다.
+  let result = [];
+  _.each(arr, function(el, idx, collection) {
+    let currentMappedEl = iteratee(el, idx, collection);
+    result.push(currentMappedEl);
+  })
+
+  return result;
 };
 
 // _.pluck은
@@ -223,6 +343,10 @@ _.pluck = function (arr, keyOrIdx) {
   // return result;
   // _.pluck은 _.map을 사용해 구현하시기 바랍니다.
   // TODO: 여기에 코드를 작성합니다.
+
+  return _.map(arr, function(el) {
+    return el[keyOrIdx];
+  });
 };
 
 // _.reduce는
@@ -275,4 +399,16 @@ _.pluck = function (arr, keyOrIdx) {
 //         // 11 + 5 * 5 = 36; (마지막 작업이므로 최종적으로 36이 리턴됩니다.)
 _.reduce = function (arr, iteratee, initVal) {
   // TODO: 여기에 코드를 작성합니다.
+
+  let acc = initVal;
+  if(acc === undefined) {
+    acc = arr[0];
+    arr = _.slice(arr, 1);
+  }
+
+  _.each(arr, function(el, idx) {
+    acc = iteratee(acc, el, idx, arr);
+  });
+
+  return acc;
 };
